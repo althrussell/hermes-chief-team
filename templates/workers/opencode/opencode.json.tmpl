@@ -1,0 +1,30 @@
+{
+  "$$schema": "https://opencode.ai/config.json",
+  "model": "databricks-google/${HCT_MODEL_CODER}",
+  "small_model": "databricks-google/${HCT_MODEL_CODER}",
+  "enabled_providers": ["databricks-google"],
+  "autoupdate": false,
+  "share": "disabled",
+  "provider": {
+    "databricks-google": {
+      "npm": "@ai-sdk/google",
+      "name": "Databricks Unity Gateway (Gemini)",
+      "options": {
+        "baseURL": "${HCT_WORKSPACE_HOST}/ai-gateway/gemini/v1beta",
+        "apiKey": "replaced-per-request-by-hct-databricks-auth-plugin",
+        "headers": {
+          "Databricks-Ai-Gateway-Request-Tags": "{\"source\":\"hermes-chief-team\",\"harness\":\"opencode\"}"
+        }
+      },
+      "models": {
+        "${HCT_MODEL_CODER}": {"name": "Gemini 4 Argon via Unity Gateway"}
+      }
+    }
+  },
+  "permission": {
+    "edit": "allow",
+    "bash": "allow",
+    "webfetch": "deny",
+    "external_directory": "allow"
+  }
+}

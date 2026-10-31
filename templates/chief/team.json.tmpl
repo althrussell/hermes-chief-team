@@ -1,0 +1,96 @@
+{
+  "version": 1,
+  "description": "External worker role bindings for Chief. teamctl reads this file; Chief reads it at session start.",
+  "gateway": {
+    "workspace_host": "${HCT_WORKSPACE_HOST}",
+    "databricks_profile": "${HCT_DATABRICKS_PROFILE}",
+    "token_helper": "${HCT_CHIEF_DIR}/bin/hct-token",
+    "note": "Tokens are minted per request by the token helper; none are stored in this file."
+  },
+  "chief": {
+    "harness": "hermes",
+    "hermes_profile": "${HCT_HERMES_PROFILE}",
+    "model": "${HCT_MODEL_CHIEF}",
+    "route": "${HCT_WORKSPACE_HOST}/ai-gateway/openai/v1 (transport codex_responses)"
+  },
+  "roles": {
+    "planner": {
+      "harness": "claude-code",
+      "executable": "${HCT_CLAUDE_BIN}",
+      "model": "${HCT_MODEL_PLANNER}",
+      "route": "${HCT_WORKSPACE_HOST}/ai-gateway/anthropic",
+      "config_ref": "${HCT_CHIEF_DIR}/workers/claude-home",
+      "env": {"CLAUDE_CONFIG_DIR": "${HCT_CHIEF_DIR}/workers/claude-home"},
+      "paths": {
+        "settings": "${HCT_CHIEF_DIR}/workers/claude-home/settings.json",
+        "mcp_config": "${HCT_CHIEF_DIR}/workers/claude-home/empty-mcp.json"
+      },
+      "permission_mode": "dontAsk",
+      "allowed_tools": ["Read", "Grep", "Glob", "LS",
+        "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)", "Bash(git rev-parse:*)",
+        "Bash(git branch:*)", "Bash(ls:*)", "Write(/{output_dir}/**)", "Edit(/{output_dir}/**)"],
+      "disallowed_tools": ["WebFetch", "WebSearch"],
+      "writes_product_code": false,
+      "timeout_s": 3600,
+      "brief": "roles/planner.md"
+    },
+    "coder": {
+      "harness": "opencode",
+      "executable": "${HCT_OPENCODE_BIN}",
+      "provider_id": "databricks-google",
+      "model": "${HCT_MODEL_CODER}",
+      "route": "${HCT_WORKSPACE_HOST}/ai-gateway/gemini/v1beta",
+      "config_ref": "${HCT_CHIEF_DIR}/workers/opencode",
+      "env": {
+        "OPENCODE_CONFIG_DIR": "${HCT_CHIEF_DIR}/workers/opencode",
+        "OPENCODE_CONFIG": "${HCT_CHIEF_DIR}/workers/opencode/opencode.json",
+        "OPENCODE_DISABLE_PROJECT_CONFIG": "1",
+        "OPENCODE_DISABLE_MODELS_FETCH": "1",
+        "OPENCODE_DISABLE_AUTOUPDATE": "1",
+        "OPENCODE_DISABLE_CLAUDE_CODE_SKILLS": "1"
+      },
+      "paths": {
+        "config": "${HCT_CHIEF_DIR}/workers/opencode/opencode.json",
+        "auth_plugin": "${HCT_CHIEF_DIR}/workers/opencode/plugin/hct-databricks-auth.js"
+      },
+      "path_prepend": ["${HCT_NODE_BIN_DIR}"],
+      "writes_product_code": true,
+      "timeout_s": 5400,
+      "brief": "roles/coder.md"
+    },
+    "reviewer": {
+      "harness": "claude-code",
+      "executable": "${HCT_CLAUDE_BIN}",
+      "model": "${HCT_MODEL_REVIEWER}",
+      "route": "${HCT_WORKSPACE_HOST}/ai-gateway/anthropic",
+      "config_ref": "${HCT_CHIEF_DIR}/workers/claude-home",
+      "env": {"CLAUDE_CONFIG_DIR": "${HCT_CHIEF_DIR}/workers/claude-home"},
+      "paths": {
+        "settings": "${HCT_CHIEF_DIR}/workers/claude-home/settings.json",
+        "mcp_config": "${HCT_CHIEF_DIR}/workers/claude-home/empty-mcp.json"
+      },
+      "permission_mode": "dontAsk",
+      "allowed_tools": ["Read", "Grep", "Glob", "LS",
+        "Bash(git status:*)", "Bash(git log:*)", "Bash(git diff:*)", "Bash(git show:*)", "Bash(git rev-parse:*)",
+        "Bash(git branch:*)", "Bash(ls:*)", "Write(/{output_dir}/**)", "Edit(/{output_dir}/**)"],
+      "disallowed_tools": ["WebFetch", "WebSearch"],
+      "writes_product_code": false,
+      "timeout_s": 3600,
+      "brief": "roles/reviewer.md"
+    },
+    "tester": {
+      "harness": "codex",
+      "executable": "${HCT_CODEX_BIN}",
+      "model": "${HCT_MODEL_TESTER}",
+      "route": "${HCT_WORKSPACE_HOST}/ai-gateway/codex/v1",
+      "config_ref": "${HCT_CHIEF_DIR}/workers/codex-home",
+      "env": {"CODEX_HOME": "${HCT_CHIEF_DIR}/workers/codex-home"},
+      "paths": {"config": "${HCT_CHIEF_DIR}/workers/codex-home/config.toml"},
+      "path_prepend": ["${HCT_NODE_BIN_DIR}"],
+      "sandbox": "workspace-write",
+      "writes_product_code": false,
+      "timeout_s": 5400,
+      "brief": "roles/tester.md"
+    }
+  }
+}

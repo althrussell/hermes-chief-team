@@ -1,0 +1,22 @@
+# Codex home for the Tester role only (CODEX_HOME is set for that child process).
+# Every request goes to Databricks Unity Gateway; there is no other provider here.
+model = "${HCT_MODEL_TESTER}"
+model_provider = "hct-databricks"
+model_reasoning_effort = "high"
+approval_policy = "never"
+sandbox_mode = "workspace-write"
+check_for_update_on_startup = false
+
+[model_providers.hct-databricks]
+name = "Databricks Unity Gateway"
+base_url = "${HCT_WORKSPACE_HOST}/ai-gateway/codex/v1"
+wire_api = "responses"
+
+[model_providers.hct-databricks.auth]
+command = "${HCT_CHIEF_DIR}/bin/hct-token"
+args = []
+timeout_ms = 30000
+refresh_interval_ms = 900000
+
+[model_providers.hct-databricks.http_headers]
+Databricks-Ai-Gateway-Request-Tags = '{"source":"hermes-chief-team","harness":"codex"}'

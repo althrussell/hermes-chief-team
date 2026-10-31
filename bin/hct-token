@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""Print a Databricks bearer for Unity Gateway on stdout (bare token, nothing else).
+
+Used as the credential helper for every worker harness: Claude Code `apiKeyHelper`, Codex
+`model_providers.<id>.auth.command`, and the OpenCode auth plugin. The Databricks CLI owns OAuth
+refresh; this wrapper only selects the profile and strips the JSON envelope.
+
+Configuration comes from the installed site file (HCT_SITE_ENV, default
+<chief_dir>/site.env next to this script's parent) so no harness needs extra environment.
+"""
+import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+
+def _site_values() -> dict:
+    path = Path(os.environ.get("HCT_SITE_ENV") or Path(__file__).resolve().parent.parent / "site.env")
+    values = {}
+    if path.is_file():
+        for line in path.read_text().splitlines():
+            line = line.strip()
+            if line and not line.startswith("#") and "=" in line:
+                key, _, value = line.partition("=")
+                values[key.strip()] = value.strip().strip('"').strip("'")
+    return values
+
+
+def main() -> int:
+    site = _site_values()
+    databricks = site.get("HCT_DATABRICKS_BIN") or "databricks"
+    profile = site.get("HCT_DATABRICKS_PROFILE")
+    if not profile:
+        print("hct-token: HCT_DATABRICKS_PROFILE is not set in site.env", file=sys.stderr)
+        return 2
+    argv = [databricks, "auth", "token", "--profile", profile, "-o", "json"]
+    if "--force-refresh" in sys.argv[1:]:
+        argv.append("--force-refresh")
+    try:
+        out = subprocess.run(argv, capture_output=True, text=True, timeout=60, check=True).stdout
+        token = json.loads(out)["access_token"]
+    except subprocess.CalledProcessError:
+        print(f"hct-token: `databricks auth token --profile {profile}` failed; "
+              f"run `databricks auth login --profile {profile}`", file=sys.stderr)
+        return 1
+    except (subprocess.TimeoutExpired, ValueError, KeyError) as exc:
+        print(f"hct-token: could not mint a token ({type(exc).__name__})", file=sys.stderr)
+        return 1
+    sys.stdout.write(token)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

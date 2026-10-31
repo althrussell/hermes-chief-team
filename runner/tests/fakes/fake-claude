@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+"""Stand-in for `claude -p --output-format json` used only by teamctl's wrapper tests."""
+import json, os, sys, time
+args = sys.argv[1:]
+prompt = sys.stdin.read()
+time.sleep(float(os.environ.get("HCT_TEST_CHILD_SLEEP", "0")))
+session = args[args.index("--session-id") + 1] if "--session-id" in args else None
+model = args[args.index("--model") + 1] if "--model" in args else None
+print(json.dumps({"type": "result", "subtype": "success", "is_error": False, "result": prompt,
+                  "session_id": session, "modelUsage": {model: {"inputTokens": 1}}, "num_turns": 1}))
+sys.exit(int(os.environ.get("HCT_TEST_CHILD_EXIT", "0")))

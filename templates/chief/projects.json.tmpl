@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "worktrees_root": "${HCT_WORKTREES_DIR}",
+  "repos": {
+    "wt": {
+      "name": "Workshop Terminal",
+      "root": "${HCT_PROJECT_WT_ROOT}",
+      "default_base": "${HCT_PROJECT_WT_BASE}",
+      "summary": "Per-attendee Databricks App: one-click Claude Code / Codex terminals with Databricks credentials wired up, plus an operator-driven insights pane.",
+      "instructions": ["README.md", "AGENTS.md", "CLAUDE.md", ".claude/"]
+    },
+    "ct": {
+      "name": "Control Tower",
+      "root": "${HCT_PROJECT_CT_ROOT}",
+      "default_base": "${HCT_PROJECT_CT_BASE}",
+      "summary": "Admin-workspace Databricks App that provisions and tears down temporary serverless lab workspaces and per-participant UC catalogs for workshops.",
+      "instructions": ["README.md", "AGENTS.md", "specs/", ".claude/"]
+    }
+  },
+  "relationship": "Control Tower is the control plane that provisions workshop lab workspaces; Workshop Terminal is the attendee-facing app used inside those workshops. Cross-repo features usually change a contract between them (provisioning inputs, deployed app config, credentials, entitlements). Record the contract and the merge/deploy order in feature.json."
+}

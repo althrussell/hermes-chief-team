@@ -1,0 +1,64 @@
+// Keeps a fresh Databricks bearer on every Unity Gateway request from the Coder role.
+// Gemini on Unity Gateway accepts `Authorization: Bearer`, not `x-goog-api-key` (verified 401),
+// so the SDK's placeholder key header is removed. The token is never written to disk.
+import { execFile } from "node:child_process"
+import { promisify } from "node:util"
+
+const PROVIDERS = new Set(["databricks-google"])
+const TOKEN_COMMAND = "${HCT_CHIEF_DIR}/bin/hct-token"
+const REFRESH_SKEW_MS = 120_000
+const run = promisify(execFile)
+let accessToken
+let expiresAt = 0
+let pending
+
+function remember(token) {
+  accessToken = token
+  expiresAt = Date.now() + 10 * 60_000
+  try {
+    const claims = JSON.parse(Buffer.from(token.split(".")[1], "base64url").toString())
+    if (typeof claims.exp === "number") expiresAt = claims.exp * 1000
+  } catch {}
+}
+
+async function mint() {
+  try {
+    const { stdout } = await run(TOKEN_COMMAND, [], { encoding: "utf8", timeout: 60_000 })
+    const token = stdout.trim()
+    if (!token) throw new Error("empty token")
+    remember(token)
+  } catch (error) {
+    throw new Error("hct-token failed: " + String(error.stderr || error.message || "").trim().slice(0, 300))
+  }
+}
+
+function refresh() {
+  if (!pending) pending = mint().finally(() => { pending = undefined })
+  return pending
+}
+
+function withAuth(input, init, token) {
+  const headers = new Headers(input instanceof Request ? input.headers : undefined)
+  new Headers(init?.headers).forEach((value, key) => headers.set(key, value))
+  headers.delete("x-goog-api-key")
+  headers.set("Authorization", "Bearer " + token)
+  return { ...init, headers }
+}
+
+async function gatewayFetch(input, init) {
+  if (!accessToken || expiresAt <= Date.now() + REFRESH_SKEW_MS) await refresh()
+  const used = accessToken
+  const response = await fetch(input, withAuth(input, init, used))
+  if (response.status !== 401) return response
+  if (accessToken === used) await refresh()
+  return fetch(input, withAuth(input, init, accessToken))
+}
+
+export const HctDatabricksAuth = async () => ({
+  config: async (config) => {
+    for (const id of PROVIDERS) {
+      const options = config.provider?.[id]?.options
+      if (options) options.fetch = gatewayFetch
+    }
+  },
+})

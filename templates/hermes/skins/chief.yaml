@@ -1,0 +1,6 @@
+name: chief
+description: Chief, the coordinating agent for a multi-repo feature team
+branding:
+  agent_name: "Chief"
+  welcome: "Chief here. Tell me what you need; I scope it and hand it to the team."
+  response_label: " ◆ Chief "

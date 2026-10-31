@@ -1,0 +1,23 @@
+{
+  "$$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "apiKeyHelper": "${HCT_CHIEF_DIR}/bin/hct-token",
+  "model": "${HCT_MODEL_CLAUDE}",
+  "env": {
+    "ANTHROPIC_BASE_URL": "${HCT_WORKSPACE_HOST}/ai-gateway/anthropic",
+    "ANTHROPIC_MODEL": "${HCT_MODEL_CLAUDE}",
+    "ANTHROPIC_DEFAULT_OPUS_MODEL": "${HCT_MODEL_CLAUDE}",
+    "ANTHROPIC_DEFAULT_SONNET_MODEL": "${HCT_MODEL_CLAUDE}",
+    "ANTHROPIC_DEFAULT_HAIKU_MODEL": "${HCT_MODEL_CLAUDE}",
+    "ANTHROPIC_SMALL_FAST_MODEL": "${HCT_MODEL_CLAUDE}",
+    "CLAUDE_CODE_SUBAGENT_MODEL": "${HCT_MODEL_CLAUDE}",
+    "ANTHROPIC_CUSTOM_HEADERS": "Databricks-Ai-Gateway-Request-Tags: {\"source\":\"hermes-chief-team\",\"harness\":\"claude-code\"}",
+    "CLAUDE_CODE_API_KEY_HELPER_TTL_MS": "900000",
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
+    "DISABLE_AUTOUPDATER": "1",
+    "DISABLE_TELEMETRY": "1",
+    "DISABLE_ERROR_REPORTING": "1"
+  },
+  "permissions": {
+    "defaultMode": "default"
+  }
+}
